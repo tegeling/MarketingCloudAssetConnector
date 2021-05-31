@@ -1,18 +1,13 @@
-# Salesforce DX Project: Next Steps
+# Salesforce Integration with Marketing Cloud
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+Upload assets from Salesforce Core to Marketing Cloud
 
-## How Do You Plan to Deploy Your Changes?
+Uses Salesforce Marketing Cloud Rest API
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+## Additional references
 
-## Configure Your Salesforce DX Project
+Postman Collection
+https://developer.salesforce.com/blogs/2021/04/explore-the-salesforce-marketing-cloud-apis-with-a-postman-collection.html
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
-
-## Read All About It
-
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+Marketing Cloud API documentation
+https://developer.salesforce.com/docs/atlas.en-us.noversion.mc-apis.meta/mc-apis/routes.htm#detail_CreateAsset
