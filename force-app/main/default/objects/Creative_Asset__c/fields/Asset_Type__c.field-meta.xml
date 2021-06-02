@@ -22,6 +22,11 @@
                 <default>false</default>
                 <label>gif</label>
             </value>
+            <value>
+                <fullName>23</fullName>
+                <default>false</default>
+                <label>jpg</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
