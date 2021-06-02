@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Customer_Key__c</fullName>
+    <description>Reference to customer&apos;s private ID/name for the asset</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Reference to customer&apos;s private ID/name for the asset</inlineHelpText>
+    <label>Customer Key</label>
+    <length>255</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
