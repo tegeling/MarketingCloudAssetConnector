@@ -18,14 +18,14 @@ global with sharing class MCCreateNewAssetCallout {
         WHERE DeveloperName = :request.connection
       ];
 
-      Map<String,String> assetTypes = new Map<String,String>();
-      assetTypes.put('28', 'png');
-      assetTypes.put('20', 'gif');
-      assetTypes.put('23', 'jpg');
+      Map<String,Integer> assetTypes = new Map<String,Integer>();
+      assetTypes.put('png',28);
+      assetTypes.put('gif',20);
+      assetTypes.put('jpg',23);
 
       // get Document Content
       ContentVersion[] contents = [
-        SELECT Id, VersionData
+        SELECT Id, PathOnClient, FileExtension, VersionData, VersionNumber
         FROM ContentVersion
         WHERE ContentDocumentId = :request.fileId
         LIMIT 1
@@ -33,6 +33,32 @@ global with sharing class MCCreateNewAssetCallout {
       MCCreateNewAssetResult result = new MCCreateNewAssetResult();
       if (contents.size() != 1) {
         return result;
+      }
+
+      // check metadata
+      Integer version = 0;
+      if (request?.version != null) {
+        version = request?.version;
+      } else if (!String.isBlank(contents[0]?.VersionNumber)) {
+        version = Integer.valueOf(contents[0]?.VersionNumber);
+      }
+      String assetType = 'gif';
+      if (!String.isBlank(request?.assetType)) {
+        assetType = request?.assetType;
+      } else if (!String.isBlank(contents[0]?.FileExtension)) {
+        assetType = contents[0]?.FileExtension;
+      }
+      String fileName = 'unknown';
+      if (!String.isBlank(request?.fileName)) {
+        fileName = request?.fileName;
+      } else if (!String.isBlank(contents[0]?.PathOnClient)) {
+        fileName = contents[0]?.PathOnClient;
+      }
+      String customerKey = 'unknown';
+      if (!String.isBlank(request?.customerKey)) {
+        customerKey = request?.customerKey;
+      } else {
+        customerKey = contents[0]?.Id;
       }
 
       // authentication
@@ -70,21 +96,21 @@ global with sharing class MCCreateNewAssetCallout {
       JSONGenerator assetGen = JSON.createGenerator(true);
       assetGen.writeStartObject();
       assetGen.writeStringField('name', request.assetName);      
-      assetGen.writeStringField('customerKey', request?.customerKey);      
+      assetGen.writeStringField('customerKey', customerKey);      
       assetGen.writeStringField('description', request?.description);      
-      assetGen.writeNumberField('version', request.version);      
+      assetGen.writeNumberField('version', version);      
       assetGen.writeFieldName('category');
       assetGen.writeStartObject();
       assetGen.writeNumberField('id', 1783484);      
       assetGen.writeEndObject();
       assetGen.writeFieldName('assetType');
       assetGen.writeStartObject();
-      assetGen.writeStringField('name', assetTypes.get(request?.assetType));      
-      assetGen.writeNumberField('id', Integer.valueOf(request?.assetType));      
+      assetGen.writeStringField('name', assetType);      
+      assetGen.writeNumberField('id', assetTypes.get(assetType));      
       assetGen.writeEndObject();
       assetGen.writeFieldName('FileProperties');
       assetGen.writeStartObject();
-      assetGen.writeStringField('fileName', request?.fileName);      
+      assetGen.writeStringField('fileName', fileName);      
       assetGen.writeEndObject();
       assetGen.writeBlobField('file', contents[0]?.VersionData);      
       assetGen.writeEndObject();
@@ -113,25 +139,22 @@ global with sharing class MCCreateNewAssetCallout {
       @InvocableVariable(required=true label='File ID' description='Identifier of the new file')
         global ID fileId;
      
-      @InvocableVariable(required=true label='Record ID' description='Related Salesforrce record')
-      global ID recordId;
-
       @InvocableVariable(required=true label='Asset Name' description='Name of the asset, set by the client. 200 character maximum')
       global String assetName;
       
-      @InvocableVariable(label='Customer Key' description='Reference to customers private ID/name for the asset')
+      @InvocableVariable(label='Customer Key' description='Reference to customers private ID/name for the asset (optional)')
       global String customerKey;
 
       @InvocableVariable(label='Description' description='Description of the asset, set by the client')
       global String description;
 
-      @InvocableVariable(label='Version' description='The version of the asset')
+      @InvocableVariable(label='Version' description='The version of the asset (optional)')
       global Integer version;
 
-      @InvocableVariable(label='Asset Type Id' description='The type of the asset (i.e. 28 for png)')
+      @InvocableVariable(label='Asset Type' description='The type of the asset (png, gif, jpg - optional)')
       global String assetType;      
 
-      @InvocableVariable(label='Asset File Name' description='The name of the asset file')
+      @InvocableVariable(label='Asset File Name' description='The name of the asset file (optional)')
       global String fileName;      
     }
      

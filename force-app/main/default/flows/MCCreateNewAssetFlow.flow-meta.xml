@@ -12,33 +12,15 @@
         </connector>
         <flowTransactionModel>Automatic</flowTransactionModel>
         <inputParameters>
-            <name>fileName</name>
-            <value>
-                <elementReference>Get_Record.File_Name__c</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
             <name>assetName</name>
             <value>
                 <elementReference>Get_Record.Asset_Name__c</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
-            <name>assetType</name>
-            <value>
-                <elementReference>Get_Record.Asset_Type__c</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
             <name>connection</name>
             <value>
                 <stringValue>Payback</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>customerKey</name>
-            <value>
-                <elementReference>Get_Record.Customer_Key__c</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -51,18 +33,6 @@
             <name>fileId</name>
             <value>
                 <elementReference>Get_Newest_Document_Link.ContentDocumentId</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>recordId</name>
-            <value>
-                <elementReference>recordId</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>version</name>
-            <value>
-                <elementReference>Get_Record.Version__c</elementReference>
             </value>
         </inputParameters>
         <storeOutputAutomatically>true</storeOutputAutomatically>

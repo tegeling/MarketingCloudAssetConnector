@@ -78,6 +78,10 @@
                 <behavior>Edit</behavior>
                 <field>Asset_Height__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Asset_Preview__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns/>
         <style>TwoColumnsLeftToRight</style>
