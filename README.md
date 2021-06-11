@@ -11,14 +11,74 @@ Uses Salesforce Marketing Cloud Rest API
 
 ## Deploy Metadata
 
+### Installing the app using a Scratch Org
+
+1. Set up your environment including:
+
+   - Enable Dev Hub in your Trailhead Playground
+   - Install Salesforce CLI
+   - Install Visual Studio Code
+   - Install the Visual Studio Code Salesforce extensions
+
+1. If you haven't already done so, authorize your hub org and provide it with an alias (**devhub** in the command below):
+
+   ```
+   sfdx auth:web:login -d -a devhub
+   ```
+
+1. Clone the MarketingCloudAssetConnector repository:
+
+   ```
+   git clone https://github.com/tegeling/MarketingCloudAssetConnector
+   cd MarketingCloudAssetConnector
+   ```
+
+1. Create a scratch org and provide it with an alias (**MCAssetConnector** in the command below):
+
+   ```
+   sfdx force:org:create -s -f config/project-scratch-def.json -a MCAssetConnector
+   ```
+
+1. Push the app to your scratch org:
+
+   ```
+   sfdx force:source:push
+   ```
+
+1. Assign the **MCAssetConnectorPerm** permission set to the default user:
+
+   ```
+   sfdx force:user:permset:assign -n MCAssetConnectorPerm
+   ```
+
+1. Open the scratch org:
+
+   ```
+   sfdx force:org:open
+   ```
+
+### Installing the app using an Unlocked Package
+
+Follow this set of instructions if you want to deploy the app to a more permanent environment than a Scratch org or if you don't want to install the local developement tools. You can use a non source-tracked orgs such as a free [Developer Edition Org](https://developer.salesforce.com/signup) or a [Trailhead Playground](https://trailhead.salesforce.com/).
+
+Make sure to start from a brand-new environment to avoid conflicts with previous work you may have done.
+
+1. Log in to your org
+
+1. Click [this link](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t5I000001eewrQAA) to install the MarketingCloudAssetConnector unlocked package in your org.
+
+1. Select **Install for All Users**
+
+1. In App Launcher, click **View All** then select the **Creative Assets** tab.
+
 ## Configure Connection Settings
 
 ### Enter Marketing Cloud connection settings as custom metadata
 
-Use Custom Metadata Type MCConnectionSetting to enter your specific connection settings like subdomain, client_id, client_secret and account_id
+Use Custom Metadata Type **MCConnectionSetting** to enter your specific connection settings like subdomain, client_id, client_secret and account_id
 You get the relevant settings from your Marketing Cloud API Integration configuration.
 
-- Copy your subdomain value from either Authentication Base URI or REST Base URI. For example: from https://mc120345679012-abcdefghi-key.auth.marketingcloudapis.com/ just copy mc120345679012-abcdefghi-key
+- Copy your subdomain value from either Authentication Base URI or REST Base URI. For example: from https://mc120345679012-abcdefghi-key.auth.marketingcloudapis.com/ just copy **mc120345679012-abcdefghi-key**
 - Copy Client Id
 - Copy Client Secret
 - Copy Account Id
@@ -30,7 +90,7 @@ Open Manage Records for MCConnectionSetting, add a new record with New.
 Give your record a Label and MCConnectionSetting Name (like MC) and enter your values from above.
 ![Add new record](./screenshots/AddNewMetadataRecord.png)
 
-If you miss this step and your configuration is not found, you will see "System.QueryException: List has no rows for assignment to SObject" error.
+If you miss this step and your configuration is not found, you will see `"System.QueryException: List has no rows for assignment to SObject"` error.
 
 ### Authorize endpoints with Remote Site Settings
 
@@ -43,7 +103,7 @@ Note: This connector does not use Named Credentials.
 
 ![Edit Remote Site Settings](./screenshots/RemoteSiteSettings.png)
 
-If you miss this step, you will see "System.CalloutException: Unauthorized endpoint, please check Setup->Security->Remote site settings. endpoint = https://mc120345679012-abcdefghi-key.auth.marketingcloudapis.com/v2/token" errors.
+If you miss this step, you will see `"System.CalloutException: Unauthorized endpoint, please check Setup->Security->Remote site settings. endpoint = https://mc120345679012-abcdefghi-key.auth.marketingcloudapis.com/v2/token"` errors.
 
 ## Creative Assets and upload steps
 
@@ -53,11 +113,11 @@ Create a new sample record and attached a file
 ![Creative Asset Sample Record](./screenshots/SampleCreativeAsset.png)
 ![Creative Asset Sample Record with File](./screenshots/SampleCreativeAssetFiles.png)
 
-This object has a Quick Action button named "Upload Creative Asset" to invoke a Flow named MCCreateNewAssetFlow. You can change and edit this flow to adopt your specific requirements.
+This object has a Quick Action button named **Upload Creative Asset** to invoke a Flow named MCCreateNewAssetFlow. You can change and edit this flow to adopt your specific requirements.
 
 ![MCCreateNewAssetFlow](./screenshots/MCCreateNewAssetFlow.png)
 
-The flow contains an Apex Action named Create New Asset. This action invokes the Apex invocable method in class MCCreateNewAssetCallout.
+The flow contains an Apex Action named **Create New Asset**. This action invokes the Apex invocable method in class MCCreateNewAssetCallout.
 You can configure the following input parameters:
 | Label | Description | Required/Optional |
 |---------------|------------------------------|--------------------|
