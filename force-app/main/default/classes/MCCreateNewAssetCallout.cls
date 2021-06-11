@@ -1,224 +1,298 @@
 global with sharing class MCCreateNewAssetCallout {
-    @InvocableMethod(label='Create New Asset' description='Uploads the referenced file as a new asset to MarketingCloud.' category= 'Marketing Cloud Assets' callout=true)
-
-    global static List<MCCreateNewAssetResult> createNewAssetCallout(List<MCCreateNewAssetRequest> requests) {
-        List<MCCreateNewAssetResult> results = new List<MCCreateNewAssetResult>();
-        for (MCCreateNewAssetRequest request : requests) {
-          results.add(doCallout(request));
-        }
-        return results;
+  @InvocableMethod(
+    label='Create New Asset'
+    description='Uploads the referenced file as a new asset to MarketingCloud.'
+    category='Marketing Cloud Assets'
+    callout=true
+  )
+  global static List<MCCreateNewAssetResult> createNewAssetCallout(
+    List<MCCreateNewAssetRequest> requests
+  ) {
+    List<MCCreateNewAssetResult> results = new List<MCCreateNewAssetResult>();
+    for (MCCreateNewAssetRequest request : requests) {
+      results.add(doCallout(request));
     }
+    return results;
+  }
 
-    private static MCCreateNewAssetResult doCallout(MCCreateNewAssetRequest request) {
+  private static MCCreateNewAssetResult doCallout(
+    MCCreateNewAssetRequest request
+  ) {
+    // get connection settings
+    MCConnectionSetting__mdt settings = [
+      SELECT client_id__c, client_secret__c, account_id__c, subdomain__c
+      FROM MCConnectionSetting__mdt
+      WHERE DeveloperName = :request.connection
+    ];
 
-      // get connection settings
-      MCConnectionSetting__mdt settings = [
-        SELECT client_id__c, client_secret__c, account_id__c, subdomain__c
-        FROM MCConnectionSetting__mdt
-        WHERE DeveloperName = :request.connection
-      ];
+    Map<String, Integer> assetTypes = new Map<String, Integer>();
+    assetTypes.put('png', 28);
+    assetTypes.put('gif', 20);
+    assetTypes.put('jpg', 23);
 
-      Map<String,Integer> assetTypes = new Map<String,Integer>();
-      assetTypes.put('png',28);
-      assetTypes.put('gif',20);
-      assetTypes.put('jpg',23);
-
-      // get Document Content
-      ContentVersion[] contents = [
-        SELECT Id, PathOnClient, FileExtension, VersionData, VersionNumber
-        FROM ContentVersion
-        WHERE ContentDocumentId = :request.fileId
-        LIMIT 1
-      ];
-      MCCreateNewAssetResult result = new MCCreateNewAssetResult();
-      if (contents.size() != 1) {
-        return result;
-      }
-
-      // check metadata
-      Integer version = 0;
-      if (request?.version != null) {
-        version = request?.version;
-      } else if (!String.isBlank(contents[0]?.VersionNumber)) {
-        version = Integer.valueOf(contents[0]?.VersionNumber);
-      }
-      String assetType = 'gif';
-      if (!String.isBlank(request?.assetType)) {
-        assetType = request?.assetType;
-      } else if (!String.isBlank(contents[0]?.FileExtension)) {
-        assetType = contents[0]?.FileExtension;
-      }
-      String fileName = 'unknown';
-      if (!String.isBlank(request?.fileName)) {
-        fileName = request?.fileName;
-      } else if (!String.isBlank(contents[0]?.PathOnClient)) {
-        fileName = contents[0]?.PathOnClient;
-      }
-      String customerKey = 'unknown';
-      if (!String.isBlank(request?.customerKey)) {
-        customerKey = request?.customerKey;
-      } else {
-        customerKey = contents[0]?.Id;
-      }
-
-      // authentication
-      String auth_token = '';
-      Http http = new Http();
-      HttpRequest httpAuthRequest = new HttpRequest();
-      httpAuthRequest.setHeader('Content-Type', 'application/json');
-      httpAuthRequest.setMethod('POST');
-      httpAuthRequest.setEndpoint('https://' + settings.subdomain__c + '.auth.marketingcloudapis.com/v2/token');
-      JSONGenerator gen = JSON.createGenerator(true);
-      gen.writeStartObject();
-      gen.writeStringField('grant_type', 'client_credentials');      
-      gen.writeStringField('client_id', settings.client_id__c);      
-      gen.writeStringField('client_secret', settings.client_secret__c);      
-      gen.writeStringField('account_id', settings.account_id__c);
-      gen.writeEndObject();
-      httpAuthRequest.setBody(gen.getAsString());
-      HttpResponse httpAuthResponse = http.send(httpAuthRequest);
-      JSONParser parser = JSON.createParser(httpAuthResponse.getBody());
-      while (parser.nextToken() != null) {
-        if ((parser.getCurrentToken() == JSONToken.FIELD_NAME) && 
-            (parser.getText() == 'access_token')) {
-            // Get the value.
-            parser.nextToken();
-            auth_token = parser.getText();
-        }
-      }
-
-      // asset post
-      HttpRequest httpRestRequest = new HttpRequest();
-      httpRestRequest.setMethod('POST');
-      httpRestRequest.setHeader('Content-Type', 'application/json');
-      httpRestRequest.setHeader('Authorization', 'Bearer ' + auth_token);
-      httpRestRequest.setEndpoint('https://' + settings.subdomain__c + '.rest.marketingcloudapis.com/asset/v1/content/assets');
-      JSONGenerator assetGen = JSON.createGenerator(true);
-      assetGen.writeStartObject();
-      assetGen.writeStringField('name', request.assetName);      
-      assetGen.writeStringField('customerKey', customerKey);      
-      assetGen.writeStringField('description', request?.description);      
-      assetGen.writeNumberField('version', version);      
-      assetGen.writeFieldName('category');
-      assetGen.writeStartObject();
-      assetGen.writeNumberField('id', 1783484);      
-      assetGen.writeEndObject();
-      assetGen.writeFieldName('assetType');
-      assetGen.writeStartObject();
-      assetGen.writeStringField('name', assetType);      
-      assetGen.writeNumberField('id', assetTypes.get(assetType));      
-      assetGen.writeEndObject();
-      assetGen.writeFieldName('FileProperties');
-      assetGen.writeStartObject();
-      assetGen.writeStringField('fileName', fileName);      
-      assetGen.writeEndObject();
-      assetGen.writeBlobField('file', contents[0]?.VersionData);      
-      assetGen.writeEndObject();
-      httpRestRequest.setBody(assetGen.getAsString());
-      HttpResponse httpRestResponse = http.send(httpRestRequest);
-
-      // parse response
-      JSONParser assetParser = JSON.createParser(httpRestResponse.getBody());
-      MCAssetResponse assetResponse = (MCAssetResponse)assetParser.readValueAs(MCAssetResponse.class);
-      result.internalID = assetResponse?.id;
-      result.publishedDatetime = assetResponse?.modifiedDate;
-      result.publishedURL = assetResponse?.fileProperties?.publishedURL;
-      result.status = assetResponse?.status?.name;
-      result.fileSize = assetResponse?.fileProperties?.fileSize;
-      result.width = assetResponse?.fileProperties?.width;
-      result.height = assetResponse?.fileProperties?.height;
-
+    // get Document Content
+    ContentVersion[] contents = [
+      SELECT Id, PathOnClient, FileExtension, VersionData, VersionNumber
+      FROM ContentVersion
+      WHERE ContentDocumentId = :request.fileId
+      LIMIT 1
+    ];
+    MCCreateNewAssetResult result = new MCCreateNewAssetResult();
+    if (contents.size() != 1) {
       return result;
     }
 
-
-    global class MCCreateNewAssetRequest {
-      @InvocableVariable(required=true label='Connection' description='Connection settings as defined in Custom Metadata MCConnectionSetting__mdt')
-      global String connection;
-
-      @InvocableVariable(required=true label='File ID' description='Identifier of the new file')
-        global ID fileId;
-     
-      @InvocableVariable(required=true label='Asset Name' description='Name of the asset, set by the client. 200 character maximum')
-      global String assetName;
-      
-      @InvocableVariable(label='Customer Key' description='Reference to customers private ID/name for the asset (optional)')
-      global String customerKey;
-
-      @InvocableVariable(label='Description' description='Description of the asset, set by the client')
-      global String description;
-
-      @InvocableVariable(label='Version' description='The version of the asset (optional)')
-      global Integer version;
-
-      @InvocableVariable(label='Asset Type' description='The type of the asset (png, gif, jpg - optional)')
-      global String assetType;      
-
-      @InvocableVariable(label='Asset File Name' description='The name of the asset file (optional)')
-      global String fileName;      
+    // check metadata
+    Integer version = 0;
+    if (request?.version != null) {
+      version = request?.version;
+    } else if (!String.isBlank(contents[0]?.VersionNumber)) {
+      version = Integer.valueOf(contents[0]?.VersionNumber);
     }
-     
-    global class MCCreateNewAssetResult {
-      @InvocableVariable(label='Internal ID' description='Internal Marketing Cloud Identifier')
-      global String internalID;
-    
-      @InvocableVariable(label='Published URL' description='Asset is available at this URL')
-      global String publishedURL;
-
-      @InvocableVariable(label='Status' description='Asset Status')
-      global String status;
-
-      @InvocableVariable(label='Published Datetime' description='Asset publication date and time')
-      global Datetime publishedDatetime;
-
-      @InvocableVariable(label='File Size' description='Asset file size')
-      global Integer fileSize;
-
-      @InvocableVariable(label='Asset Width' description='Asset pixel width')
-      global Integer width;
-
-      @InvocableVariable(label='Asset Height' description='Asset pixel height')
-      global Integer height;
-}
-     
-    class MCCreateNewAssetException extends Exception {}
-
-    public class MCAssetResponse {
-      public String id;
-      public String objectID;
-      public Integer version;
-      public Datetime modifiedDate;
-      public MCAssetResponseFileProperties fileProperties;
-      public MCAssetResponseStatus status;
+    String assetType = 'gif';
+    if (!String.isBlank(request?.assetType)) {
+      assetType = request?.assetType;
+    } else if (!String.isBlank(contents[0]?.FileExtension)) {
+      assetType = contents[0]?.FileExtension;
+    }
+    String fileName = 'unknown';
+    if (!String.isBlank(request?.fileName)) {
+      fileName = request?.fileName;
+    } else if (!String.isBlank(contents[0]?.PathOnClient)) {
+      fileName = contents[0]?.PathOnClient;
+    }
+    String customerKey = 'unknown';
+    if (!String.isBlank(request?.customerKey)) {
+      customerKey = request?.customerKey;
+    } else {
+      customerKey = contents[0]?.Id;
     }
 
-    public class MCAssetResponseFileProperties {
-      public String fileName;
-      public Integer fileSize;
-      public Integer width;
-      public Integer height;
-      public String publishedURL;
+    // authentication
+    String auth_token = '';
+    Http http = new Http();
+    HttpRequest httpAuthRequest = new HttpRequest();
+    httpAuthRequest.setHeader('Content-Type', 'application/json');
+    httpAuthRequest.setMethod('POST');
+    httpAuthRequest.setEndpoint(
+      'https://' +
+      settings.subdomain__c +
+      '.auth.marketingcloudapis.com/v2/token'
+    );
+    JSONGenerator gen = JSON.createGenerator(true);
+    gen.writeStartObject();
+    gen.writeStringField('grant_type', 'client_credentials');
+    gen.writeStringField('client_id', settings.client_id__c);
+    gen.writeStringField('client_secret', settings.client_secret__c);
+    gen.writeStringField('account_id', settings.account_id__c);
+    gen.writeEndObject();
+    httpAuthRequest.setBody(gen.getAsString());
+    HttpResponse httpAuthResponse = http.send(httpAuthRequest);
+    JSONParser parser = JSON.createParser(httpAuthResponse.getBody());
+    while (parser.nextToken() != null) {
+      if (
+        (parser.getCurrentToken() == JSONToken.FIELD_NAME) &&
+        (parser.getText() == 'access_token')
+      ) {
+        // Get the value.
+        parser.nextToken();
+        auth_token = parser.getText();
+      }
     }
 
-    public class MCAssetResponseStatus {
-      public String id;
-      public String name;
-    }
+    // retrieve categories
+    HttpRequest httpCategoryRequest = new HttpRequest();
+    httpCategoryRequest.setMethod('GET');
+    httpCategoryRequest.setHeader('Content-Type', 'application/json');
+    httpCategoryRequest.setHeader('Authorization', 'Bearer ' + auth_token);
+    httpCategoryRequest.setEndpoint(
+      'https://' +
+      settings.subdomain__c +
+      '.rest.marketingcloudapis.com/asset/v1/content/categories'
+    );
+    HttpResponse httpCategoryResponse = http.send(httpCategoryRequest);
 
-    public class MCCategory {
-      public Integer count;
-      public Integer page;
-      public Integer pageSize;
-      public List<MCCategoryItem> items;
-    }
+    // parse response
+    JSONParser categoryParser = JSON.createParser(
+      httpCategoryResponse.getBody()
+    );
+    MCCategory categoryResponse = (MCCategory) categoryParser.readValueAs(
+      MCCategory.class
+    );
 
-    public class MCCategoryItem {
-      public Integer id;
-      public String description;
-      public Integer enterpriseId;
-      public Integer memberId;
-      public Integer parentId;
-      public String categoryType;
-    }
+    // asset post
+    HttpRequest httpRestRequest = new HttpRequest();
+    httpRestRequest.setMethod('POST');
+    httpRestRequest.setHeader('Content-Type', 'application/json');
+    httpRestRequest.setHeader('Authorization', 'Bearer ' + auth_token);
+    httpRestRequest.setEndpoint(
+      'https://' +
+      settings.subdomain__c +
+      '.rest.marketingcloudapis.com/asset/v1/content/assets'
+    );
+    JSONGenerator assetGen = JSON.createGenerator(true);
+    assetGen.writeStartObject();
+    assetGen.writeStringField('name', request.assetName);
+    assetGen.writeStringField('customerKey', customerKey);
+    assetGen.writeStringField('description', request?.description);
+    assetGen.writeNumberField('version', version);
+    assetGen.writeFieldName('category');
+    assetGen.writeStartObject();
+    assetGen.writeNumberField('id', 1783484);
+    assetGen.writeEndObject();
+    assetGen.writeFieldName('assetType');
+    assetGen.writeStartObject();
+    assetGen.writeStringField('name', assetType);
+    assetGen.writeNumberField('id', assetTypes.get(assetType));
+    assetGen.writeEndObject();
+    assetGen.writeFieldName('FileProperties');
+    assetGen.writeStartObject();
+    assetGen.writeStringField('fileName', fileName);
+    assetGen.writeEndObject();
+    assetGen.writeBlobField('file', contents[0]?.VersionData);
+    assetGen.writeEndObject();
+    httpRestRequest.setBody(assetGen.getAsString());
+    HttpResponse httpRestResponse = http.send(httpRestRequest);
 
+    // parse response
+    JSONParser assetParser = JSON.createParser(httpRestResponse.getBody());
+    MCAssetResponse assetResponse = (MCAssetResponse) assetParser.readValueAs(
+      MCAssetResponse.class
+    );
+    result.internalID = assetResponse?.id;
+    result.publishedDatetime = assetResponse?.modifiedDate;
+    result.publishedURL = assetResponse?.fileProperties?.publishedURL;
+    result.status = assetResponse?.status?.name;
+    result.fileSize = assetResponse?.fileProperties?.fileSize;
+    result.width = assetResponse?.fileProperties?.width;
+    result.height = assetResponse?.fileProperties?.height;
+
+    return result;
+  }
+
+  global class MCCreateNewAssetRequest {
+    @InvocableVariable(
+      required=true
+      label='Connection'
+      description='Connection settings as defined in Custom Metadata MCConnectionSetting__mdt'
+    )
+    global String connection;
+
+    @InvocableVariable(
+      required=true
+      label='File ID'
+      description='Identifier of the new file'
+    )
+    global ID fileId;
+
+    @InvocableVariable(
+      required=true
+      label='Asset Name'
+      description='Name of the asset, set by the client. 200 character maximum'
+    )
+    global String assetName;
+
+    @InvocableVariable(
+      label='Customer Key'
+      description='Reference to customers private ID/name for the asset (optional)'
+    )
+    global String customerKey;
+
+    @InvocableVariable(
+      label='Description'
+      description='Description of the asset, set by the client'
+    )
+    global String description;
+
+    @InvocableVariable(
+      label='Version'
+      description='The version of the asset (optional)'
+    )
+    global Integer version;
+
+    @InvocableVariable(
+      label='Asset Type'
+      description='The type of the asset (png, gif, jpg - optional)'
+    )
+    global String assetType;
+
+    @InvocableVariable(
+      label='Asset File Name'
+      description='The name of the asset file (optional)'
+    )
+    global String fileName;
+  }
+
+  global class MCCreateNewAssetResult {
+    @InvocableVariable(
+      label='Internal ID'
+      description='Internal Marketing Cloud Identifier'
+    )
+    global String internalID;
+
+    @InvocableVariable(
+      label='Published URL'
+      description='Asset is available at this URL'
+    )
+    global String publishedURL;
+
+    @InvocableVariable(label='Status' description='Asset Status')
+    global String status;
+
+    @InvocableVariable(
+      label='Published Datetime'
+      description='Asset publication date and time'
+    )
+    global Datetime publishedDatetime;
+
+    @InvocableVariable(label='File Size' description='Asset file size')
+    global Integer fileSize;
+
+    @InvocableVariable(label='Asset Width' description='Asset pixel width')
+    global Integer width;
+
+    @InvocableVariable(label='Asset Height' description='Asset pixel height')
+    global Integer height;
+  }
+
+  class MCCreateNewAssetException extends Exception {
+  }
+
+  public class MCAssetResponse {
+    public String id;
+    public String objectID;
+    public Integer version;
+    public Datetime modifiedDate;
+    public MCAssetResponseFileProperties fileProperties;
+    public MCAssetResponseStatus status;
+  }
+
+  public class MCAssetResponseFileProperties {
+    public String fileName;
+    public Integer fileSize;
+    public Integer width;
+    public Integer height;
+    public String publishedURL;
+  }
+
+  public class MCAssetResponseStatus {
+    public String id;
+    public String name;
+  }
+
+  public class MCCategory {
+    public Integer count;
+    public Integer page;
+    public Integer pageSize;
+    public List<MCCategoryItem> items;
+  }
+
+  public class MCCategoryItem {
+    public Integer id;
+    public String description;
+    public Integer enterpriseId;
+    public Integer memberId;
+    public Integer parentId;
+    public String categoryType;
+  }
 }
