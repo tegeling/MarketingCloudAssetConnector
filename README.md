@@ -70,6 +70,19 @@ You can configure the following input parameters:
 | Asset Type | The type of the asset (png, gif, jpg) | Optional |
 | Asset File Name | The name of the asset file | Optional |
 
+If you don't specify optional parameters, the code is using the referenced filename, extension and version as input parameters.
+
+The Apex Action returns the following fields as a a result from the asset creation:
+| Label | Description |
+|---------------|------------------------------|
+| Internal ID | Internal Marketing Cloud Identifier |
+| Published URL | Asset is available at this URL |
+| Status | Asset Status |
+| Published Datetime | Asset publication date and time |
+| File Size | Asset file size |
+| Asset Width | Asset pixel width |
+| Asset Height | Asset pixel height |
+
 # Additional references
 
 Postman Collection
