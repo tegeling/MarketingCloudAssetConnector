@@ -67,6 +67,8 @@ global with sharing class MCCreateNewAssetCallout {
     } else {
       customerKey = contents[0]?.Id;
     }
+    Integer categoryId = 0;
+    Integer rootCategoryId = 0;
 
     // authentication
     String auth_token = '';
@@ -112,13 +114,26 @@ global with sharing class MCCreateNewAssetCallout {
     );
     HttpResponse httpCategoryResponse = http.send(httpCategoryRequest);
 
-    // parse response
+    // parse categories response
     JSONParser categoryParser = JSON.createParser(
       httpCategoryResponse.getBody()
     );
     MCCategory categoryResponse = (MCCategory) categoryParser.readValueAs(
       MCCategory.class
     );
+    for (MCCategoryItem catItem : categoryResponse.items) {
+      // check root folder or category
+      if (catItem.parentId == 0) {
+        rootCategoryId = catItem.id;
+      } else if (catItem?.name == request.categoryName) {
+        categoryId = catItem.id;
+      }
+    }
+    // check category
+    if (categoryId == 0) {
+      categoryId = rootCategoryId;
+    }
+    System.debug('#### Category Id: ' + categoryId);
 
     // asset post
     HttpRequest httpRestRequest = new HttpRequest();
@@ -191,6 +206,13 @@ global with sharing class MCCreateNewAssetCallout {
       description='Name of the asset, set by the client. 200 character maximum'
     )
     global String assetName;
+
+    @InvocableVariable(
+      required=true
+      label='Category Name'
+      description='Name of the category/folder, where the assets is stored. Default is root folder.'
+    )
+    global String categoryName;
 
     @InvocableVariable(
       label='Customer Key'
@@ -292,6 +314,7 @@ global with sharing class MCCreateNewAssetCallout {
     public String description;
     public Integer enterpriseId;
     public Integer memberId;
+    public String name;
     public Integer parentId;
     public String categoryType;
   }

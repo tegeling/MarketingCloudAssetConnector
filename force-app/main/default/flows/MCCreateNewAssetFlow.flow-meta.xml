@@ -18,6 +18,12 @@
             </value>
         </inputParameters>
         <inputParameters>
+            <name>categoryName</name>
+            <value>
+                <stringValue>Integration</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
             <name>connection</name>
             <value>
                 <stringValue>MC</stringValue>
