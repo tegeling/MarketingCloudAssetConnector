@@ -10,6 +10,8 @@ Uses Salesforce Marketing Cloud Rest API
 
 ## Configure Connection Settings
 
+###
+
 Use Custom Metadata Type MCConnectionSetting to enter your specific connection settings like subdomain, client_id, client_secret and account_id
 
 ## Additional references

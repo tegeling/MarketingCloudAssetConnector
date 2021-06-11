@@ -205,4 +205,20 @@ global with sharing class MCCreateNewAssetCallout {
       public String name;
     }
 
+    public class MCCategory {
+      public Integer count;
+      public Integer page;
+      public Integer pageSize;
+      public List<MCCategoryItem> items;
+    }
+
+    public class MCCategoryItem {
+      public Integer id;
+      public String description;
+      public Integer enterpriseId;
+      public Integer memberId;
+      public Integer parentId;
+      public String categoryType;
+    }
+
 }
