@@ -20,7 +20,7 @@
         <inputParameters>
             <name>connection</name>
             <value>
-                <stringValue>Payback</stringValue>
+                <stringValue>MC</stringValue>
             </value>
         </inputParameters>
         <inputParameters>

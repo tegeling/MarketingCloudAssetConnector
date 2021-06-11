@@ -39,3 +39,4 @@ $RECYCLE.BIN/
 
 # tests
 tests/apex/*
+force-app/main/default/customMetadata/MCConnectionSetting.MC.md-meta.xml
