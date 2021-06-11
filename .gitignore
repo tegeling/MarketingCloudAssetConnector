@@ -40,3 +40,5 @@ $RECYCLE.BIN/
 # tests
 tests/apex/*
 force-app/main/default/customMetadata/MCConnectionSetting.MC.md-meta.xml
+force-app/main/default/remoteSiteSettings/MC_AUTH.remoteSite-meta.xml
+force-app/main/default/remoteSiteSettings/MC_REST.remoteSite-meta.xml
