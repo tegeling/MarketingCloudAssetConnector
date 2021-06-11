@@ -19,8 +19,9 @@ private class Test_MCCreateNewAssetCallout {
     p1.customerKey = 'TestCcustomerKey';
     p1.description = 'Test Description';
     p1.version = 1;
-    p1.assetType = 'gif';
+    p1.assetType = 'jpg';
     p1.fileName = 'TestFileName';
+    inputParams.add(p1);
 
     Test.startTest();
     List<MCCreateNewAssetCallout.MCCreateNewAssetResult> outputParams = MCCreateNewAssetCallout.createNewAssetCallout(
