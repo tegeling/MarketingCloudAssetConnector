@@ -36,3 +36,6 @@ $RECYCLE.BIN/
 
 # Local environment variables
 .env
+
+# tests
+tests/apex/*
