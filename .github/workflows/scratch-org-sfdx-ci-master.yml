@@ -33,8 +33,8 @@ jobs:
         run: npm ci
 
       # Prettier formatting
-      - name: "Code formatting verification with Prettier"
-        run: npm run prettier:verify
+      #- name: "Code formatting verification with Prettier"
+      #  run: npm run prettier:verify
 
       # ESlint
       #- name: "Lint Lightning Web Components"
