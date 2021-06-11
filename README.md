@@ -1,5 +1,8 @@
 # Salesforce Integration with Marketing Cloud
 
+[![Github Workflow](https://github.com/tegeling/MarketingCloudAssetConnector/actions/workflows/scratch-org-sfdx-ci-master.yml/badge.svg?branch=main)](https://github.com/tegeling/MarketingCloudAssetConnector/actions/workflows/scratch-org-sfdx-ci-master.yml)
+[![codecov](https://codecov.io/gh/tegeling/MarketingCloudAssetConnector/branch/main/graph/badge.svg?token=X4KPX6EHYX)](https://codecov.io/gh/tegeling/MarketingCloudAssetConnector)
+
 Upload assets from Salesforce Core to Marketing Cloud
 
 Uses Salesforce Marketing Cloud Rest API
