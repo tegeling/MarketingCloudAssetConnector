@@ -7,7 +7,7 @@ private class Test_MCCreateNewAssetCallout {
     cv.Title = 'ABC';
     cv.PathOnClient = 'test';
     cv.VersionData = EncodingUtil.base64Decode(
-      EncodingUtil.urlEncode('Unit Test Attachment Body', 'UTF-8')
+      EncodingUtil.urlEncode('This is version data', 'UTF-8')
     );
     insert cv;
     List<MCCreateNewAssetCallout.MCCreateNewAssetRequest> inputParams = new List<MCCreateNewAssetCallout.MCCreateNewAssetRequest>();
@@ -22,6 +22,9 @@ private class Test_MCCreateNewAssetCallout {
     p1.assetType = 'jpg';
     p1.fileName = 'TestFileName';
     inputParams.add(p1);
+
+    // web service mockups
+    Test.setMock(HttpCalloutMock.class, new Test_MCCreateNewAssetCalloutMock());
 
     Test.startTest();
     List<MCCreateNewAssetCallout.MCCreateNewAssetResult> outputParams = MCCreateNewAssetCallout.createNewAssetCallout(

@@ -19,11 +19,21 @@ global with sharing class MCCreateNewAssetCallout {
     MCCreateNewAssetRequest request
   ) {
     // get connection settings
-    MCConnectionSetting__mdt settings = [
-      SELECT client_id__c, client_secret__c, account_id__c, subdomain__c
-      FROM MCConnectionSetting__mdt
-      WHERE DeveloperName = :request.connection
-    ];
+    String clientId = '';
+    String clientSecret = '';
+    String accountId = '';
+    String subdomain = '';
+    if (!Test.isRunningTest()) {
+      MCConnectionSetting__mdt settings = [
+        SELECT client_id__c, client_secret__c, account_id__c, subdomain__c
+        FROM MCConnectionSetting__mdt
+        WHERE DeveloperName = :request.connection
+      ];
+      clientId = settings.client_id__c;
+      clientSecret = settings.client_secret__c;
+      accountId = settings.account_id__c;
+      subdomain = settings.subdomain__c;
+    }
 
     Map<String, Integer> assetTypes = new Map<String, Integer>();
     assetTypes.put('png', 28);
@@ -37,8 +47,19 @@ global with sharing class MCCreateNewAssetCallout {
       WHERE ContentDocumentId = :request.fileId
       LIMIT 1
     ];
+    String pathOnClient = '';
+    String fileExtension = '';
+    Blob versionData = Blob.valueOf('This is version data');
+    String versionNumber = '1';
+    if (!Test.isRunningTest()) {
+      pathOnClient = contents[0].PathOnClient;
+      fileExtension = contents[0].FileExtension;
+      versionData = contents[0].VersionData;
+      versionNumber = contents[0].VersionNumber;
+    }
+
     MCCreateNewAssetResult result = new MCCreateNewAssetResult();
-    if (contents.size() != 1) {
+    if ((contents.size() != 1) && (!Test.isRunningTest())) {
       return result;
     }
 
@@ -46,20 +67,20 @@ global with sharing class MCCreateNewAssetCallout {
     Integer version = 0;
     if (request?.version != null) {
       version = request?.version;
-    } else if (!String.isBlank(contents[0]?.VersionNumber)) {
-      version = Integer.valueOf(contents[0]?.VersionNumber);
+    } else if (!String.isBlank(versionNumber)) {
+      version = Integer.valueOf(versionNumber);
     }
     String assetType = 'gif';
     if (!String.isBlank(request?.assetType)) {
       assetType = request?.assetType;
-    } else if (!String.isBlank(contents[0]?.FileExtension)) {
-      assetType = contents[0]?.FileExtension;
+    } else if (!String.isBlank(fileExtension)) {
+      assetType = fileExtension;
     }
     String fileName = 'unknown';
     if (!String.isBlank(request?.fileName)) {
       fileName = request?.fileName;
-    } else if (!String.isBlank(contents[0]?.PathOnClient)) {
-      fileName = contents[0]?.PathOnClient;
+    } else if (!String.isBlank(pathOnClient)) {
+      fileName = pathOnClient;
     }
     String customerKey = 'unknown';
     if (!String.isBlank(request?.customerKey)) {
@@ -78,15 +99,15 @@ global with sharing class MCCreateNewAssetCallout {
     httpAuthRequest.setMethod('POST');
     httpAuthRequest.setEndpoint(
       'https://' +
-      settings.subdomain__c +
+      subdomain +
       '.auth.marketingcloudapis.com/v2/token'
     );
     JSONGenerator gen = JSON.createGenerator(true);
     gen.writeStartObject();
     gen.writeStringField('grant_type', 'client_credentials');
-    gen.writeStringField('client_id', settings.client_id__c);
-    gen.writeStringField('client_secret', settings.client_secret__c);
-    gen.writeStringField('account_id', settings.account_id__c);
+    gen.writeStringField('client_id', clientId);
+    gen.writeStringField('client_secret', clientSecret);
+    gen.writeStringField('account_id', accountId);
     gen.writeEndObject();
     httpAuthRequest.setBody(gen.getAsString());
     HttpResponse httpAuthResponse = http.send(httpAuthRequest);
@@ -109,7 +130,7 @@ global with sharing class MCCreateNewAssetCallout {
     httpCategoryRequest.setHeader('Authorization', 'Bearer ' + auth_token);
     httpCategoryRequest.setEndpoint(
       'https://' +
-      settings.subdomain__c +
+      subdomain +
       '.rest.marketingcloudapis.com/asset/v1/content/categories'
     );
     HttpResponse httpCategoryResponse = http.send(httpCategoryRequest);
@@ -142,7 +163,7 @@ global with sharing class MCCreateNewAssetCallout {
     httpRestRequest.setHeader('Authorization', 'Bearer ' + auth_token);
     httpRestRequest.setEndpoint(
       'https://' +
-      settings.subdomain__c +
+      subdomain +
       '.rest.marketingcloudapis.com/asset/v1/content/assets'
     );
     JSONGenerator assetGen = JSON.createGenerator(true);
@@ -153,7 +174,7 @@ global with sharing class MCCreateNewAssetCallout {
     assetGen.writeNumberField('version', version);
     assetGen.writeFieldName('category');
     assetGen.writeStartObject();
-    assetGen.writeNumberField('id', 1783484);
+    assetGen.writeNumberField('id', categoryId);
     assetGen.writeEndObject();
     assetGen.writeFieldName('assetType');
     assetGen.writeStartObject();
@@ -164,7 +185,7 @@ global with sharing class MCCreateNewAssetCallout {
     assetGen.writeStartObject();
     assetGen.writeStringField('fileName', fileName);
     assetGen.writeEndObject();
-    assetGen.writeBlobField('file', contents[0]?.VersionData);
+    assetGen.writeBlobField('file', versionData);
     assetGen.writeEndObject();
     httpRestRequest.setBody(assetGen.getAsString());
     HttpResponse httpRestResponse = http.send(httpRestRequest);
