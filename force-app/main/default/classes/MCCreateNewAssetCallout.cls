@@ -154,7 +154,6 @@ global with sharing class MCCreateNewAssetCallout {
     if (categoryId == 0) {
       categoryId = rootCategoryId;
     }
-    System.debug('#### Category Id: ' + categoryId);
 
     // asset post
     HttpRequest httpRestRequest = new HttpRequest();
