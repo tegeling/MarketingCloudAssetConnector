@@ -124,6 +124,7 @@ You can configure the following input parameters:
 | Connection | Connection settings as defined in Custom Metadata MCConnectionSetting\_\_mdt | Required |
 | File ID | Identifier of the new file | Required |
 | Asset Name | Name of the asset, set by the client. 200 character maximum | Required |
+| Category Name | Name of the category/folder, where the asset is stored. Default is root folder | Optional |
 | Customer Key | Reference to customers private ID/name for the asset | Optional |
 | Description | Description of the asset, set by the client | Optional |
 | Version | The version of the asset | Optional |
