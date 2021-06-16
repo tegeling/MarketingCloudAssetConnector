@@ -24,15 +24,20 @@ global with sharing class MCCreateNewAssetCallout {
     String accountId = '';
     String subdomain = '';
     if (!Test.isRunningTest()) {
-      MCConnectionSetting__mdt settings = [
+      List<MCConnectionSetting__mdt> settings = [
         SELECT client_id__c, client_secret__c, account_id__c, subdomain__c
         FROM MCConnectionSetting__mdt
         WHERE DeveloperName = :request.connection
       ];
-      clientId = settings.client_id__c;
-      clientSecret = settings.client_secret__c;
-      accountId = settings.account_id__c;
-      subdomain = settings.subdomain__c;
+      if (settings.size() != 1) {
+        throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+          'Connection not found'
+        );
+      }
+      clientId = settings[0].client_id__c;
+      clientSecret = settings[0].client_secret__c;
+      accountId = settings[0].account_id__c;
+      subdomain = settings[0].subdomain__c;
     }
 
     Map<String, Integer> assetTypes = new Map<String, Integer>();
@@ -47,6 +52,11 @@ global with sharing class MCCreateNewAssetCallout {
       WHERE ContentDocumentId = :request.fileId
       LIMIT 1
     ];
+    if (contents.size() == 0) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'No file attached'
+      );
+    }
     String pathOnClient = '';
     String fileExtension = '';
     Blob versionData = Blob.valueOf('This is version data');
@@ -59,10 +69,6 @@ global with sharing class MCCreateNewAssetCallout {
     }
 
     MCCreateNewAssetResult result = new MCCreateNewAssetResult();
-    if ((contents.size() != 1) && (!Test.isRunningTest())) {
-      return result;
-    }
-
     // check metadata
     Integer version = 0;
     if (request?.version != null) {
@@ -90,6 +96,13 @@ global with sharing class MCCreateNewAssetCallout {
     }
     Integer categoryId = 0;
     Integer rootCategoryId = 0;
+
+    // check asset type is valid
+    if (!assetTypes.containsKey(assetType)) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Unsupported asset type'
+      );
+    }
 
     // authentication
     String auth_token = '';
@@ -122,6 +135,12 @@ global with sharing class MCCreateNewAssetCallout {
         auth_token = parser.getText();
       }
     }
+    // check auth_token
+    if (String.isBlank(auth_token)) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Authentication failed - ' + httpAuthResponse.getBody()
+      );
+    }
 
     // retrieve categories
     HttpRequest httpCategoryRequest = new HttpRequest();
@@ -153,6 +172,13 @@ global with sharing class MCCreateNewAssetCallout {
     // check category
     if (categoryId == 0) {
       categoryId = rootCategoryId;
+    }
+
+    // raise exception if no category id was found
+    if (categoryId == 0) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Category not found'
+      );
     }
 
     // asset post
@@ -194,6 +220,14 @@ global with sharing class MCCreateNewAssetCallout {
     MCAssetResponse assetResponse = (MCAssetResponse) assetParser.readValueAs(
       MCAssetResponse.class
     );
+
+    // check if response was successfully parsed
+    if (assetResponse?.id == null) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Invalid response - ' + httpRestResponse.getBody()
+      );
+    }
+
     result.internalID = assetResponse?.id;
     result.publishedDatetime = assetResponse?.modifiedDate;
     result.publishedURL = assetResponse?.fileProperties?.publishedURL;
