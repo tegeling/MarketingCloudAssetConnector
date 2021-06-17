@@ -128,8 +128,8 @@ private class Test_MCCreateNewAssetCallout {
   private static void testCalloutExUnsupportedAssetType() {
     // setup test data
     Contentversion cv = new Contentversion();
-    cv.Title = 'ABC.csv';
-    cv.PathOnClient = 'ABC.csv';
+    cv.Title = 'ABC.xxx';
+    cv.PathOnClient = 'ABC.xxx';
     cv.VersionData = EncodingUtil.base64Decode(
       EncodingUtil.urlEncode('This is version data', 'UTF-8')
     );

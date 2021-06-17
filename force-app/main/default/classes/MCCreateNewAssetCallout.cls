@@ -40,10 +40,7 @@ global with sharing class MCCreateNewAssetCallout {
       subdomain = settings[0].subdomain__c;
     }
 
-    Map<String, Integer> assetTypes = new Map<String, Integer>();
-    assetTypes.put('png', 28);
-    assetTypes.put('gif', 20);
-    assetTypes.put('jpg', 23);
+    MCAssetTypes assetTypes = new MCAssetTypes();
 
     // get Document Content
     ContentVersion[] contents = [
@@ -92,7 +89,7 @@ global with sharing class MCCreateNewAssetCallout {
     Integer rootCategoryId = 0;
 
     // check asset type is valid
-    if (!assetTypes.containsKey(assetType)) {
+    if (!assetTypes.allAssetTypes.containsKey(assetType)) {
       throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
         'Unsupported asset type'
       );
@@ -198,7 +195,7 @@ global with sharing class MCCreateNewAssetCallout {
     assetGen.writeFieldName('assetType');
     assetGen.writeStartObject();
     assetGen.writeStringField('name', assetType);
-    assetGen.writeNumberField('id', assetTypes.get(assetType));
+    assetGen.writeNumberField('id', assetTypes.allAssetTypes.get(assetType));
     assetGen.writeEndObject();
     assetGen.writeFieldName('FileProperties');
     assetGen.writeStartObject();
