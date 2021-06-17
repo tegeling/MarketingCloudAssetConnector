@@ -57,16 +57,10 @@ global with sharing class MCCreateNewAssetCallout {
         'No file attached'
       );
     }
-    String pathOnClient = '';
-    String fileExtension = '';
-    Blob versionData = Blob.valueOf('This is version data');
-    String versionNumber = '1';
-    if (!Test.isRunningTest()) {
-      pathOnClient = contents[0].PathOnClient;
-      fileExtension = contents[0].FileExtension;
-      versionData = contents[0].VersionData;
-      versionNumber = contents[0].VersionNumber;
-    }
+    String pathOnClient = contents[0].PathOnClient;
+    String fileExtension = contents[0].FileExtension;
+    Blob versionData = contents[0].VersionData;
+    String versionNumber = contents[0].VersionNumber;
 
     MCCreateNewAssetResult result = new MCCreateNewAssetResult();
     // check metadata
@@ -161,6 +155,11 @@ global with sharing class MCCreateNewAssetCallout {
     MCCategory categoryResponse = (MCCategory) categoryParser.readValueAs(
       MCCategory.class
     );
+    if (categoryResponse?.items == null) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Category not found'
+      );
+    }
     for (MCCategoryItem catItem : categoryResponse.items) {
       // check root folder or category
       if (catItem.parentId == 0) {
@@ -172,13 +171,6 @@ global with sharing class MCCreateNewAssetCallout {
     // check category
     if (categoryId == 0) {
       categoryId = rootCategoryId;
-    }
-
-    // raise exception if no category id was found
-    if (categoryId == 0) {
-      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
-        'Category not found'
-      );
     }
 
     // asset post
@@ -195,7 +187,9 @@ global with sharing class MCCreateNewAssetCallout {
     assetGen.writeStartObject();
     assetGen.writeStringField('name', request.assetName);
     assetGen.writeStringField('customerKey', customerKey);
-    assetGen.writeStringField('description', request?.description);
+    if (request?.description != null) {
+      assetGen.writeStringField('description', request?.description);
+    }
     assetGen.writeNumberField('version', version);
     assetGen.writeFieldName('category');
     assetGen.writeStartObject();
