@@ -10,6 +10,9 @@
         <connector>
             <targetReference>Update_Record</targetReference>
         </connector>
+        <faultConnector>
+            <targetReference>Check_Exception</targetReference>
+        </faultConnector>
         <flowTransactionModel>Automatic</flowTransactionModel>
         <inputParameters>
             <name>assetName</name>
@@ -44,6 +47,123 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <apiVersion>51.0</apiVersion>
+    <constants>
+        <name>exAuthenticationFailed</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Authentication failed</stringValue>
+        </value>
+    </constants>
+    <constants>
+        <name>exConnectionNotFound</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Connection not found</stringValue>
+        </value>
+    </constants>
+    <constants>
+        <name>exInvalidResponse</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Invalid response</stringValue>
+        </value>
+    </constants>
+    <constants>
+        <name>exMissingFileId</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Missing required input parameter: fileId</stringValue>
+        </value>
+    </constants>
+    <constants>
+        <name>exUnsupportedAssetType</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Unsupported asset type</stringValue>
+        </value>
+    </constants>
+    <decisions>
+        <name>Check_Exception</name>
+        <label>Check Exception</label>
+        <locationX>1100</locationX>
+        <locationY>518</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Connection_not_found</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Flow.FaultMessage</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <elementReference>exConnectionNotFound</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>screen_Connection_not_found</targetReference>
+            </connector>
+            <label>Connection not found</label>
+        </rules>
+        <rules>
+            <name>Missing_FileId</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Flow.FaultMessage</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <elementReference>exMissingFileId</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>screen_Missing_File_Id</targetReference>
+            </connector>
+            <label>Missing FileId</label>
+        </rules>
+        <rules>
+            <name>Unsupported_asset_type</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Flow.FaultMessage</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <elementReference>exUnsupportedAssetType</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>screeen_Unsupported_asset_type</targetReference>
+            </connector>
+            <label>Unsupported asset type</label>
+        </rules>
+        <rules>
+            <name>Authentication_failed</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Flow.FaultMessage</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <elementReference>exAuthenticationFailed</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>screen_Authentication_failed</targetReference>
+            </connector>
+            <label>Authentication failed</label>
+        </rules>
+        <rules>
+            <name>Invalid_response</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Flow.FaultMessage</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <elementReference>exInvalidResponse</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>screen_Invalid_response</targetReference>
+            </connector>
+            <label>Invalid response</label>
+        </rules>
+    </decisions>
     <description>Invoke Apex class to upload a file as a new asset in Marketing Cloud</description>
     <interviewLabel>MCCreateNewAssetFlow {!$Flow.CurrentDateTime}</interviewLabel>
     <label>MCCreateNewAssetFlow</label>
@@ -167,6 +287,86 @@
         </inputAssignments>
         <object>Creative_Asset__c</object>
     </recordUpdates>
+    <screens>
+        <name>screeen_Unsupported_asset_type</name>
+        <label>Unsupported asset type</label>
+        <locationX>968</locationX>
+        <locationY>638</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>msg_Unsupported_asset_type</name>
+            <fieldText>&lt;p&gt;This file is an unsupported asset type.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!$Flow.FaultMessage}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>screen_Authentication_failed</name>
+        <label>Authentication failed</label>
+        <locationX>1232</locationX>
+        <locationY>638</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>msg_Authentication_failed</name>
+            <fieldText>&lt;p&gt;Authentication failed - check your connection settings&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!$Flow.FaultMessage}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>screen_Connection_not_found</name>
+        <label>Connection not found</label>
+        <locationX>440</locationX>
+        <locationY>638</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>msg_Connection_not_found</name>
+            <fieldText>&lt;p&gt;Invalid connection configuration.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!$Flow.FaultMessage}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>screen_Invalid_response</name>
+        <label>Invalid response</label>
+        <locationX>1496</locationX>
+        <locationY>638</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>msg_Invalid_response</name>
+            <fieldText>&lt;p&gt;Invalid response from Marketing Cloud:&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!$Flow.FaultMessage}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>screen_Missing_File_Id</name>
+        <label>Missing File Id</label>
+        <locationX>704</locationX>
+        <locationY>638</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>msg_Missing_File_Id</name>
+            <fieldText>&lt;p&gt;No attached file to upload.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!$Flow.FaultMessage}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
     <start>
         <locationX>50</locationX>
         <locationY>0</locationY>

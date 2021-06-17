@@ -24,15 +24,20 @@ global with sharing class MCCreateNewAssetCallout {
     String accountId = '';
     String subdomain = '';
     if (!Test.isRunningTest()) {
-      MCConnectionSetting__mdt settings = [
+      List<MCConnectionSetting__mdt> settings = [
         SELECT client_id__c, client_secret__c, account_id__c, subdomain__c
         FROM MCConnectionSetting__mdt
         WHERE DeveloperName = :request.connection
       ];
-      clientId = settings.client_id__c;
-      clientSecret = settings.client_secret__c;
-      accountId = settings.account_id__c;
-      subdomain = settings.subdomain__c;
+      if (settings.size() != 1) {
+        throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+          'Connection not found'
+        );
+      }
+      clientId = settings[0].client_id__c;
+      clientSecret = settings[0].client_secret__c;
+      accountId = settings[0].account_id__c;
+      subdomain = settings[0].subdomain__c;
     }
 
     Map<String, Integer> assetTypes = new Map<String, Integer>();
@@ -47,22 +52,17 @@ global with sharing class MCCreateNewAssetCallout {
       WHERE ContentDocumentId = :request.fileId
       LIMIT 1
     ];
-    String pathOnClient = '';
-    String fileExtension = '';
-    Blob versionData = Blob.valueOf('This is version data');
-    String versionNumber = '1';
-    if (!Test.isRunningTest()) {
-      pathOnClient = contents[0].PathOnClient;
-      fileExtension = contents[0].FileExtension;
-      versionData = contents[0].VersionData;
-      versionNumber = contents[0].VersionNumber;
+    if (contents.size() == 0) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'No file attached'
+      );
     }
+    String pathOnClient = contents[0].PathOnClient;
+    String fileExtension = contents[0].FileExtension;
+    Blob versionData = contents[0].VersionData;
+    String versionNumber = contents[0].VersionNumber;
 
     MCCreateNewAssetResult result = new MCCreateNewAssetResult();
-    if ((contents.size() != 1) && (!Test.isRunningTest())) {
-      return result;
-    }
-
     // check metadata
     Integer version = 0;
     if (request?.version != null) {
@@ -90,6 +90,13 @@ global with sharing class MCCreateNewAssetCallout {
     }
     Integer categoryId = 0;
     Integer rootCategoryId = 0;
+
+    // check asset type is valid
+    if (!assetTypes.containsKey(assetType)) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Unsupported asset type'
+      );
+    }
 
     // authentication
     String auth_token = '';
@@ -122,6 +129,12 @@ global with sharing class MCCreateNewAssetCallout {
         auth_token = parser.getText();
       }
     }
+    // check auth_token
+    if (String.isBlank(auth_token)) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Authentication failed - ' + httpAuthResponse.getBody()
+      );
+    }
 
     // retrieve categories
     HttpRequest httpCategoryRequest = new HttpRequest();
@@ -142,6 +155,11 @@ global with sharing class MCCreateNewAssetCallout {
     MCCategory categoryResponse = (MCCategory) categoryParser.readValueAs(
       MCCategory.class
     );
+    if (categoryResponse?.items == null) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Category not found'
+      );
+    }
     for (MCCategoryItem catItem : categoryResponse.items) {
       // check root folder or category
       if (catItem.parentId == 0) {
@@ -169,7 +187,9 @@ global with sharing class MCCreateNewAssetCallout {
     assetGen.writeStartObject();
     assetGen.writeStringField('name', request.assetName);
     assetGen.writeStringField('customerKey', customerKey);
-    assetGen.writeStringField('description', request?.description);
+    if (request?.description != null) {
+      assetGen.writeStringField('description', request?.description);
+    }
     assetGen.writeNumberField('version', version);
     assetGen.writeFieldName('category');
     assetGen.writeStartObject();
@@ -194,6 +214,14 @@ global with sharing class MCCreateNewAssetCallout {
     MCAssetResponse assetResponse = (MCAssetResponse) assetParser.readValueAs(
       MCAssetResponse.class
     );
+
+    // check if response was successfully parsed
+    if (assetResponse?.id == null) {
+      throw new MCCreateNewAssetCallout.MCCreateNewAssetException(
+        'Invalid response - ' + httpRestResponse.getBody()
+      );
+    }
+
     result.internalID = assetResponse?.id;
     result.publishedDatetime = assetResponse?.modifiedDate;
     result.publishedURL = assetResponse?.fileProperties?.publishedURL;

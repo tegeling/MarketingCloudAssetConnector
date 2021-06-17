@@ -1,5 +1,5 @@
 @isTest
-global class Test_MCCreateNewAssetCalloutMock implements HttpCalloutMock {
+global class Test_CalloutMockValidResponse implements HttpCalloutMock {
   global HttpResponse respond(HttpRequest req) {
     // Create a fake response
     HttpResponse res = new HttpResponse();
