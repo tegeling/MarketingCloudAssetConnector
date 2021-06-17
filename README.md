@@ -63,7 +63,7 @@ Make sure to start from a brand-new environment to avoid conflicts with previous
 
 1. Log in to your org
 
-1. Click [https://login.salesforce.com/packaging/installPackage.apexp?p0=04t5I000001eewrQAA](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t5I000001eewrQAA) to install the MarketingCloudAssetConnector unlocked package in your org.
+1. Click [https://login.salesforce.com/packaging/installPackage.apexp?p0=04t5I000001eey9QAA](https://login.salesforce.com/packaging/installPackage.apexp?p0=04t5I000001eey9QAA) to install the MarketingCloudAssetConnector unlocked package in your org.
 
 1. Select **Install for All Users**
 

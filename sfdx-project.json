@@ -4,8 +4,11 @@
             "path": "force-app",
             "default": true,
             "package": "MC Asset Connector",
-            "versionName": "ver 0.1",
-            "versionNumber": "0.1.0.NEXT"
+            "versionName": "Summer '21 v1",
+            "versionDescription": "Summer '21 v1 Release - enhanced exception handling",
+            "versionNumber": "1.0.0.NEXT",
+            "releaseNotesUrl": "https://github.com/tegeling/MarketingCloudAssetConnector",
+            "postInstallUrl": "https://github.com/tegeling/MarketingCloudAssetConnector"
         }
     ],
     "name": "MarketingCloudAssetConnector",
@@ -14,6 +17,7 @@
     "sourceApiVersion": "51.0",
     "packageAliases": {
         "MC Asset Connector": "0Ho5I000000k9f5SAA",
-        "MC Asset Connector@0.1.0-1": "04t5I000001eewrQAA"
+        "MC Asset Connector@0.1.0-1": "04t5I000001eewrQAA",
+        "MC Asset Connector@1.0.0-1": "04t5I000001eey9QAA"
     }
 }
