@@ -126,7 +126,7 @@ You can configure the following input parameters:
 | Customer Key | `String` | Reference to customers private ID/name for the asset | Optional |
 | Description | `String` | Description of the asset, set by the client | Optional |
 | Version | `Integer` | The version of the asset | Optional |
-| Asset Type | `String` | The type of the asset (png, gif, jpg) | Optional |
+| Asset Type | `String` | The type of the asset (see [this list](https://developer.salesforce.com/docs/atlas.en-us.noversion.mc-apis.meta/mc-apis/base-asset-types.htm)) | Optional |
 | Asset File Name | `String` | The name of the asset file | Optional |
 
 If you don't specify optional parameters, the code is using the referenced filename, extension and version as input parameters.
@@ -141,6 +141,16 @@ The Apex Action returns the following fields as a a result from the asset creati
 | File Size | `Integer` | Asset file size |
 | Asset Width | `Integer` | Asset pixel width |
 | Asset Height | `Integer` | Asset pixel height |
+
+The Apex Action raises the exception `MCCreateNewAssetCallout.MCCreateNewAssetException` with different messages:
+| Message | Description |
+|---------------|------------------------------|
+| `Connection not found` | There was no record found that matches `MCConnectionSetting__mdt.DeveloperName` with the given connection name |
+| `No file attached` | There was no record found that matches `ContentVersion.ContentDocumentId` with the given file record id |
+| `Unsupported asset type` | The file extension or given asset type is currently not supported |
+| `Authentication failed` with exception details | There is something wrong with the connection settings and its paramaters. The authentication failed and no valid token was generated |
+| `Category not found` | The specified category name was not found. In this case the asset should be created in the root folder |
+| `Invalid response` with exception details | The asset post failed with some errors. See exception details like asset already exists. |
 
 # Additional references
 
