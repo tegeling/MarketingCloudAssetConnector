@@ -3,8 +3,6 @@
 [![Github Workflow](https://github.com/tegeling/MarketingCloudAssetConnector/actions/workflows/scratch-org-sfdx-ci-master.yml/badge.svg?branch=main)](https://github.com/tegeling/MarketingCloudAssetConnector/actions/workflows/scratch-org-sfdx-ci-master.yml)
 [![codecov](https://codecov.io/gh/tegeling/MarketingCloudAssetConnector/branch/main/graph/badge.svg?token=X4KPX6EHYX)](https://codecov.io/gh/tegeling/MarketingCloudAssetConnector)
 
-[![codecov](https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png)](https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/src/main/webapp/resources/img/deploy.png)
-
 Upload file assets from Salesforce Core to Marketing Cloud. It contains an Apex Action for Flows to call Salesforce Marketing Cloud Rest API.
 
 # Setup and Configuration Steps
